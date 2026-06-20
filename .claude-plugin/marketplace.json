@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "ccc-divider",
+  "description": "A Claude Code plugin that displays a full-width separator line with timestamp after each response.",
+  "owner": {
+    "name": "ayii"
+  },
+  "plugins": [
+    {
+      "name": "ccc-divider",
+      "description": "Full-width visual separator with timestamp after each Claude response.",
+      "author": {
+        "name": "ayii"
+      },
+      "category": "productivity",
+      "source": {
+        "source": "local",
+        "path": "."
+      }
+    }
+  ]
+}

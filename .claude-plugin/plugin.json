@@ -1,0 +1,10 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "ccc-divider",
+  "version": "1.0.0",
+  "description": "Prints a full-width visual separator with timestamp after each Claude response, using the CC Stop hook and systemMessage.",
+  "author": {
+    "name": "ayii"
+  },
+  "category": "productivity"
+}

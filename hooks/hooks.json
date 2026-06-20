@@ -1,0 +1,15 @@
+{
+  "description": "ccc-divider: prints a full-width separator line with timestamp after each Claude response",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/separator.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
