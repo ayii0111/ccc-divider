@@ -1,100 +1,100 @@
 # ccc-divider
 
-A Claude Code plugin that displays a full-width visual separator with timestamp after each Claude response.
+A Claude Code add-on that draws full-width visual separators with a timestamp, so each
+turn is easy to scan. It provides **two independently-tunable dividers**:
+
+| Name | 名稱 | When it shows | Hook | Tuning knob |
+|---|---|---|---|---|
+| **reply** | 回覆線 | after each Claude response | `Stop` | `SEP_MARGIN_REPLY` |
+| **fork** | 分叉線 | with a choice / option card | `PreToolUse(AskUserQuestion)` | `SEP_MARGIN_FORK` |
 
 ```
-Stop says: ◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  18:32:29
+Stop says: ◆━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ⏱ 18:32:29
 ```
 
-The line dynamically fills the current terminal width, with the timestamp aligned to the right edge. Colour is Nord frost blue by default — configurable via environment variable.
+Each line dynamically fills the current terminal width, timestamp aligned right. The two
+dividers are tuned separately because Claude Code prepends a different prefix to each.
 
-## How it works
+## Install (recommended)
 
-Claude Code exposes a `Stop` hook that fires after every response. This plugin registers a shell script on that hook. The script reads `COLUMNS` from the environment (CC injects this even though the TTY is detached), computes the correct line length, and returns a `{ "systemMessage": "..." }` JSON payload — the only channel through which hook output is actually rendered to the user.
+Clone this repo anywhere, then run the installer once:
 
-## Requirements
-
-- Claude Code (claude CLI) — any recent version
-- bash (macOS / Linux)
-- No other dependencies (pure bash, no python3 required)
-
-## Installation
-
-### Option A — via your own marketplace (recommended for sharing)
-
-Push this repo to GitHub (e.g. your account is `alice`, so the repo is `alice/ccc-divider`), then run in Claude Code:
-
-```
-/plugin marketplace add <your-github-username>/ccc-divider
-/plugin install ccc-divider@ccc-divider
+```bash
+git clone https://github.com/<your-username>/ccc-divider
+cd ccc-divider
+./install.sh
 ```
 
-Replace `<your-github-username>` with your actual GitHub account name.
+`install.sh` wires both hooks into `~/.claude/settings.json`, pointing them at this repo's
+`hooks/separator.sh`. Because it references the script in place (not a copy), editing the
+script takes effect on your **next** Claude Code session — no reinstall needed.
 
-### Option B — local install (no GitHub needed)
+- Safe: the JSON is merged with `node` (which Claude Code already depends on), so it cannot
+  corrupt your settings. It only adds entries that reference `separator.sh`.
+- Idempotent: re-running replaces those entries instead of duplicating them.
+- Hooks load at session startup, so **open a new session** to see the dividers.
 
-Clone or copy this repo anywhere on your machine, then run in Claude Code:
+### Uninstall
+
+```bash
+./uninstall.sh
+```
+
+Removes only the `separator.sh` entries; everything else in `settings.json` is left intact.
+
+## Tuning the two dividers
+
+Set environment variables in your shell profile, or in Claude Code's `env` block in
+`~/.claude/settings.json`. Smaller margin = longer line.
+
+```json
+{
+  "env": {
+    "SEP_MARGIN_REPLY": "5",
+    "SEP_MARGIN_FORK": "-6"
+  }
+}
+```
+
+**How to calibrate:** if a line wraps or the timestamp is pushed off-screen → increase that
+margin. If there is a gap before the timestamp → decrease it. The fork line is only visible
+after you answer the card (it lands in the scrollback), so judge it there.
+
+## All variables
+
+| Variable | Default | Divider | Description |
+|---|---|---|---|
+| `SEP_MARGIN_REPLY` | `5` | reply 回覆線 | Width fine-tune for the after-response line. |
+| `SEP_MARGIN_FORK` | `-6` | fork 分叉線 | Width fine-tune for the choice-card line. |
+| `SEP_MARGIN` | — | reply | Legacy alias for `SEP_MARGIN_REPLY`. |
+| `SEP_COLOR` | `129,161,193` | both | Line colour as `R,G,B`. Set to `none` to disable colour. |
+| `SEP_ICON` | `⏱` | both | Icon before the timestamp. Set to `""` to disable. |
+
+Defaults were calibrated on Ghostty with a Nerd Font where `◆` renders as 2 columns; other
+terminals or fonts may differ by ±1–2.
+
+## Alternative: install as a plugin
+
+The same hooks ship as a Claude Code plugin (`.claude-plugin/`, `hooks/hooks.json`). Prefer
+`install.sh` for iterating on the script (a plugin install copies into a cache, so edits
+need a reinstall). To use the plugin instead:
 
 ```
 /plugin marketplace add /absolute/path/to/ccc-divider
 /plugin install ccc-divider@ccc-divider
 ```
 
-Open Claude Code and run:
-
-```
-/plugin marketplace add ~/cc-projects/ccc-divider
-/plugin install ccc-divider@ccc-divider
-```
-
-### Uninstall
-
-```
-/plugin uninstall ccc-divider@ccc-divider
-```
-
-## Calibration (if the line wraps or doesn't fill the terminal)
-
-The default `SEP_MARGIN=6` was calibrated on Ghostty with a Nerd Font where `◆` renders as 2 terminal columns. Other terminals or fonts may need a different value.
-
-**To adjust**, set `SEP_MARGIN` in your shell profile or in Claude Code's `env` settings:
-
-```bash
-# ~/.zshrc or ~/.bashrc
-export SEP_MARGIN=6   # increase if line wraps; decrease if there is a gap
-```
-
-Or in `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "SEP_MARGIN": "6"
-  }
-}
-```
-
-**How to find the right value:** start at `6`. If the timestamp is pushed off-screen or the line wraps → increase by 1–2. If there is a noticeable gap before the timestamp → decrease by 1.
-
-## Customisation
-
-| Variable | Default | Description |
-|---|---|---|
-| `SEP_COLOR` | `129,161,193` | Line colour as `R,G,B`. Set to `none` to disable colour. |
-| `SEP_ICON` | `⏱` | Icon shown before the timestamp. Set to `""` to disable. |
-| `SEP_MARGIN` | `6` | Width fine-tune (see Calibration above). |
-
-Example — switch to a muted green:
-
-```bash
-export SEP_COLOR="163,190,140"   # Nord aurora green (nord14)
-```
-
 ## Background: why so many constraints?
 
 If you are curious why the implementation is non-obvious:
 
-1. **TTY is detached** — CC runs hooks in a subprocess that is disconnected from the controlling terminal (`ps -o tty` shows `??`). Writing to stdout, stderr, or `/dev/tty` all fail silently or error.
-2. **TUI owns the screen** — CC is a full-screen TUI; raw ANSI writes from a subprocess would be swallowed or overwritten on the next redraw.
-3. **`systemMessage` is the only channel** — returning `{ "systemMessage": "..." }` from a Stop hook asks CC itself to render the string, which it does correctly, including ANSI colour codes.
-4. **`COLUMNS` survives the detach** — CC injects the current terminal width into the hook's environment, so the line can be sized dynamically even without a real TTY.
+1. **TTY is detached** — CC runs hooks in a subprocess disconnected from the terminal
+   (`ps -o tty` shows `??`). Writing to stdout, stderr, or `/dev/tty` fails silently.
+2. **TUI owns the screen** — CC is a full-screen TUI; raw ANSI writes from a subprocess
+   would be swallowed or overwritten on the next redraw.
+3. **`systemMessage` is the only channel** — returning `{ "systemMessage": "..." }` from a
+   hook asks CC itself to render the string, which it does correctly, including ANSI colour.
+4. **`COLUMNS` survives the detach** — CC injects the current terminal width into the hook's
+   environment, so the line can be sized dynamically even without a real TTY.
+5. **Two prefixes** — CC prepends a different label to `Stop` vs `PreToolUse` messages, which
+   is why reply and fork need separate margins.
