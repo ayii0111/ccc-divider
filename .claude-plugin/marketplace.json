@@ -13,10 +13,7 @@
         "name": "ayii"
       },
       "category": "productivity",
-      "source": {
-        "source": "local",
-        "path": "."
-      }
+      "source": "./"
     }
   ]
 }
