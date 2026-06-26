@@ -28,7 +28,15 @@ INPUT=$(cat)   # consume stdin to avoid SIGPIPE
 # Two named dividers, tuned independently (CC prepends a different prefix to each):
 #   ask   — 提案線 — shown with a choice card  (PreToolUse / AskUserQuestion)  marker: ◇
 #   reply — 回覆線 — shown after each reply     (Stop)                          marker: ◆
-if printf '%s' "$INPUT" | grep -q 'AskUserQuestion'; then MODE="ask"; else MODE="reply"; fi
+# Decide by the hook event type, NOT by a blind substring grep over the whole
+# payload (which mis-classified Stop events whenever the string "AskUserQuestion"
+# happened to appear anywhere in the JSON, e.g. inside a path field).
+# PreToolUse here only ever fires for AskUserQuestion (see hooks.json matcher).
+if printf '%s' "$INPUT" | grep -q '"hook_event_name"[[:space:]]*:[[:space:]]*"PreToolUse"'; then
+    MODE="ask"
+else
+    MODE="reply"
+fi
 
 # --- terminal width ---
 COLS=${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}
